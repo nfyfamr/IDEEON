@@ -1,0 +1,7 @@
+{
+	"__WEB_ROOT" : "./www",
+	"__FS_ROOT" : "./users",
+	"__LOG_PATH" : "./logs",
+	"PORT": 8000
+}
+

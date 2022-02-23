@@ -1,0 +1,60 @@
+
+h1 {
+	font-family: Stellar !important;
+}
+
+.custom-button {
+    width : 300px !important;
+    height:45px !important;
+}
+
+.custom-width {
+    width:400px !important;
+}
+
+.background-image {
+    background-position: 50% 0;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+ 
+
+div { position: relative; }
+p { position: absolute; top: 170px; left: 15rem; }
+#back-top {
+	position: fixed;
+	top: 8rem;
+	left: 8rem;
+}
+#back-top a {
+	width: 108px;
+	display: block;
+	text-align: center;
+	font: 11px/100% Arial, sans-serif;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: #bbb;
+	-webkit-transition: 1s;
+	-moz-transition: 1s;
+	transition: 1s;
+}
+#back-top a:hover {
+	color: #000;
+}
+#back-top span {
+	width: 109px;
+	height: 109px;
+	display: block;
+	margin-bottom: 14px;
+	background: #ddd url(../../res/button_signup_now.png) no-repeat center center;
+	-webkit-border-radius: 15px;
+	-moz-border-radius: 15px;
+	border-radius: 15px;
+	-webkit-transition: 1s;
+	-moz-transition: 1s;
+	transition: 1s;
+}
+#back-top a:hover span {
+	background-color: #777;
+}

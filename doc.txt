@@ -1,0 +1,351 @@
+// node version: 0.12.7
+// DB: orcle db 11.2g
+// server: ubuntu 14.4 LTS
+
+
+============== index.js ==============
+*서버의 메인 소스코드.
+
+* 타겟 node.js버전이 0.12.7 이어서 구현되지 않은 String 클래스의 메서드를 직접 구현
+String.endsWith
+  cmp: string. 비교할 대상 문자열.
+
+  대상 문자열이 cmp로 끝난다면 true, 그렇지 않다면 false 반환.
+
+String.startsWith
+  cmp: string. 비교할 대상 문자열.
+
+  대상 문자열이 cmp로 시작한다면 true, 그렇지 않다면 false 반환
+
+CONFIG: object. index.js 와 동일 폴더내의 config.json 파일을 로드.
+
+* url을 라우터에 추가함.
+router.add('/')
+  로그인된 세션이 접속해 있다면 'developtool.html'파일을 그렇지 않다면 'index.html'파일을 로드
+router.add('/index.html')
+  '/'로 301 리다이렉트
+router.add('/login', 'POST')
+  POST통신만 받으며 DB에 계정을 확인하여 세션의 로그인 플래그를 설정한다.
+router.add('/logout')
+  세션의 로그인 플래그를 지운다.
+router.add('/signup', 'POST')
+  POST통신만 받으며 DB에 계정을 등록한다.
+
+* restFul 구현을 위해 URL은 다음과 같은 규칙을 따름
+URL: /모델/대상
+GET: Read
+POST: Create
+PUT: Update
+Delete: Delete
+
+router.add('/file/document', 'GET')
+  클라이언트사이드의 파일->불러오기에 대응
+router.add('/file/document', 'POST')
+  클라이언트사이드의 파일->새문서에 대응
+router.add('/file/document', 'PUT')
+  클라이언트사이드의 파일->저장하기에 대응
+router.add('/file/solution', "POST')
+  클라이언트사이드의 파일->새솔루션에 대응
+router.add('/compile', 'PUT')
+  클라이언트사이드의 실행->Compile에 대응. 컴파일루틴이 정상적으로 진행되었을 경우 '/solution_name/.bin/file_name'과
+  '/run/solution_name/file_name'의 URL경로로 각각 실행파일 다운로드, 실행결과의 stdout의 내용을 받아볼 수 있게 한다.
+router.add('/solutionexplorer', 'GET')
+  클라이언트사이드의 솔루션탐색기의 정보를 업데이트 하는데 사용되는 URL
+router.add('/favicon.ico')
+  파비콘 컨트롤. 
+
+
+============== config.js ==============
+* index.js 설정 파일
+
+__WEB_ROOT: string. web페이지 파일을 관리할 최상위 폴더 경로
+__FS_ROOT: string. user가 저장한 데이터를 관리할 최상위 폴더 경로
+__LOG_PATH: string. 서버로그파일을 저장할 최상위 폴더 경로
+PORT: number. 서버를 열 포트 번호
+
+
+============== node_modules/compiler/index.js ==============
+* 주어진 경로를 가지고 필요한 컴파일러로 컴파일 하는 모듈.
+
+compile
+  solution: solution name. string
+  type: solution type. string. 컴파일 타입을 c, cpp, java 셋중에 하나로 지정한다.
+  sourcePath: string. 컴파일할 소스파일 경로
+  objName: string. 컴파일 후 생성할 목적파일 이름
+  option: string. 컴파일시 직접 컴파일러에 전달할 컴파일러 옵션
+  callback: function. 컴파일 루틴 완료 후 실행할 callback 함수
+  
+  아래의 컴파일러 리스트중 type변수를 통해 switch문으로 분기해 사용할 컴파일러를 정한다.
+    - gcc			리눅스를 위한 gcc 컴파일러
+    - g++			리눅스를 위한 g++ 컴파일러
+    - javac			자바컴파일러
+    - i686-w64-mingw32-gcc	window플랫폼을 위한 C 크로스컴파일러
+    - i686-w64-mingw32-g++	window플랫폼을 위한 C++ 크로스컴파일러
+  컴파일을 정한 후 exec()를 이용해 새로운 프로세스로 해당 컴파일러를 실행한 후 그 결과를 callback함수로 넘겨준다.
+
+setDir
+  path: string. 소스파일을 관리하는 최상위 폴더 경로
+
+  소스 파일을 관리하는 최상위 폴더 경로를 설정하는 setter
+
+
+============== node_modules/filesystem-manager/index.js ==============
+* user들의 소스파일을 관리할 매니저 모듈.
+
+parsingName
+  name: string. 패턴검사할 name
+  
+  name이 ip주소라면 'anonymous/'를 앞에 붙여준다.
+
+checkUpperDirAccess
+  paht1: string. 상위 디렉토리 경로
+  path2: string. 접근할 상대경로
+
+  보안을 위해 path1과 path2를 이은 결과가 path1의 하위 디렉토리가 아닌경우 false를 반환
+
+exploreDirectoryTree 
+  startPath: string. 재귀탐색을 시작할 경로
+
+  startPath부터 디렉토리의 구조를 탐색하여 반환한다.
+
+isDirectory 
+  path: string. 디렉토리인지 확인할 경로
+
+  path가 디렉토리면 true를 반환.
+
+deleteDirAll 
+  argPath: string. 지울 경로
+
+  argPath및 하위 파일,폴더를 전부 지운다.
+
+* 외부에 노출할 모듈의 원형 클래스.
+class FSM
+  fileSystemRoot: string. user들의 소스코드 데이터를 관리할 폴더의 최상위 경로
+  fsInstanceTable: object. user들의 소스코들을 객체 단위로 관리하며 그 인스턴스를 캐시하여 접근할 테이블
+  fsTree: array. fileSystemRoot기준의 모든 하위 디렉토리의 트리
+
+  setFileSystemRoot, getFileSystemRoot
+    멤버변수 fileSystemRoot의 setter, setter 메서드.
+
+  getInstance
+    instName: string. 얻을 인스턴스의 user name. ip주소나 이메일 주소가 올 수 있다.
+
+    instName가 적합한 경로인지 확인하고 캐시(fsInstanceTable)에서 인스턴스가 이미 로드 되었는지 확인 후 
+    인스턴스를 반환.
+
+  removeInstance
+    instName: string. 지울 인스턴스의 user name. ip주소나 이메일 주소가 올 수 있다.
+
+    캐시(fsInstaceTable)에서 해당 인스턴스를 지운다.
+
+  createUser
+    userName: string. 만들 폴더의 user name.
+
+    fileSystemRoot에 userName의 이름의 폴더를 생성.
+
+  deleteUser
+    userName: string. 지울 폴더의 user name.
+
+    fileSystemRoot에 userName의 이름의 폴더를 삭제.
+
+  showUsers
+    fileSystemRoot에 있는 폴더들의 리스트를 콘솔로 출력한다.(디버깅용 메서드)
+
+  class Instance
+  * user들의 소스코드를 user별로 관리 할 원형 클래스
+    self: object. 의도치 않은 this키워드의 오용을 방지하기 위해 사용
+    rootPath: string. user instance 최상위 폴더 경로
+    writable: boolean. 현재 입력스트림이 파일을 기록가능한 상태인지 확인하기 위한 플래그
+    solutionList: array. user instance가 갖고 있는 솔루션들의 list
+    fsTree: array. user instance가 갖고 있는 디렉토리 트리
+
+    updateTree
+      fsTree를 최신으로 갱신
+
+    updateSolutionList
+      solutionList를 최신으로 갱신
+
+    showSolutionList
+      solutionList를 콘솔출력(디버깅용 메서드)
+
+    getSolutionType
+      solutionName: string. 타입을 확인할 솔루션 이름
+
+      solution이 C/C++/Java중 어느 소스로 작성되었는지를 반환. 해당 정보는
+      솔루션 최상위 경로에 ".type" 라는 이름의 텍스트 파일에 기록되어있다.
+
+    getRootPath
+      rootPath를 반환.
+
+    getWritable
+      입력스트림이 현재 입력 가능한 상태인지 반환
+
+    createDirectory
+      relPath: string. 생성할 폴더 경로
+
+      relPath에 새로운 폴더를 생성한다. relPath는 rootPath보다 위의 경로를 참조할 수 없다.
+
+    deleteDirectory
+      relPath: string. 삭제할 폴더 경로
+
+      relPath의 폴더를 삭제한다. relPath는 rootPath보다 위의 경로를 참조할 수 없다.
+
+    readFile
+      relPath: string. 읽어들일 파일의 경로
+
+      relPath의 파일의 내용을 반환한다.
+
+    writeFile
+      relPath: string. 기록할 파일의 경로
+      data: string. 기록할 내용
+
+      writable 플래그를 확인하고 relPath의 파일에 data를 기록한다.
+
+    deleteFile 
+      relPath: string. 삭제할 파일의 경로
+
+      relPath의 파일을 삭제한다.
+
+    createSolution
+      solutionName: string. 생성할 solution name
+      type: string. 소스코드의 타입. C/C++/Java 셋중 하나.
+
+      rootPath밑에 solutionName의 폴더를 생성하고 그 밑에 header, src, res, .bin 폴더를 생성하고 .type파일을 기록한다.
+
+    deleteSolution
+      solutionName: string. 삭제할 solution name
+
+      solutionName에 해당하는 폴더를 삭제한다.
+
+
+============== node_modules/ideeon/index.js ==============
+* DB연동 모듈
+
+connectionInfo: DB 커넥션 정볼르 담는 객체
+
+encrypt
+  data: string. sha1 암호화 할 정보
+
+  password를 안전하게 저장하기 위해 암호화하는 함수.
+
+release
+  conn: object. 커넥션풀로 반환할 커넥션.
+
+  코드의 중복을 없애기 위해 작성.
+
+signup
+  data: object. 새로 등록할 계정의 정보를 담고 있는 객체. m_email, m_pw, m_birth를 멤버변수로 갖고있다.
+  callback: function. 계정 등록 루틴이 완료된 후 부를 callback함수.
+
+  signup메서드가 호출 될 때마다 새로운 커넥션을 받아 data의 내용을 DB에 저장하고 callback에 에러를 전달하며 
+  커넥션을 반환한다. 이때 비밀번호는 sha1 암호화하여 저장한다.
+
+login
+  data: object. 로그인 할 정보를 담고 있는 객체. m_email, m_pw를 멤버변수로 갖고있다.
+  callback: function. 로그인 루틴이 완료된 후 부를 callback함수.
+
+  DB에서 m_email의 암호화된 m_pw를 받아온 후 data.m_pw를 sha1암호화 한 값과 비교한다.
+
+
+============== node_modules/logger/index.js ==============
+* 로깅 모듈
+
+* 외부에 노출할 모듈의 원형 클래스
+class Logger
+  __LOG_PATH: string. 로깅파일을 저장할 경로
+
+  setLogPath, getLogPath
+    __LOG_PATH의 setter, getter.
+
+Logger.log
+  msg: string. 로그파일에 기록할 메시지
+
+  로그파일에 msg를 기록하고 로깅되었음을 콘솔에 출력한다.
+
+
+============== node_modules/oracledb ==============
+* 최신 오라클-nodejs 연동 모듈. v.1.3.0
+
+
+============== node_modules/router/index.js ==============
+* http요청 routing 모듈
+
+CONFIG: object. 동일 폴더내의 config.json 파일을 로드.
+MIMETYPE: object. 동일 폴더내의 mimetype.json 파일을 로드.
+
+routingTable: object. http요청을 처리할 함수들을 담고있는 테이블
+sessionTable: object. 접속중인 세션들을 관리할 테이블
+__WEB_ROOT: string. web페이지 파일을 관리할 최상위 폴더 경로
+
+createSessionId
+  영문대소문자 및 숫자로 이루어진 60자의 session id를 생성
+
+* Session 정보를 담고있는 객체의 원형 클래스
+class Session
+  ssid: string. 세션 아이디
+  ip: string. 해당하는 세션의 접속 ip
+  login: number. 로그인 수준을 담고있는 플래그
+
+add
+  keyA: array or string. 라우팅할 URL을 지정
+  func: function. 라우팅된 요청을 처리할 함수
+  onMethod: array or string. 라우팅받을 메서드. 디폴트 값은 CONFIG.DEFAULT_ACCEPT_METHOD 이다.
+
+  keyA가 string이면 원소 하나짜리의 array로 자동 파싱하며 keyA배열의 각원소(URL)에 대해 routingTable에 처리함수를
+  등록한다.
+
+remove
+  key: string. routingTalbe에서 삭제할 처리함수를 가리키는 URL. add의 keyA에 대응하지만 remove의 key는
+       string만을 받는다.
+  method: string. routingTable에서 삭제할 처리함수를 가리키는 method. add의 onMethod에 대응하지만 
+       remove의 method는 string만을 받는다.
+
+  key와 method에 일치하는 처리함수를 routingTable에서 삭제한다.
+
+addEndDataEvent
+  req: object. 이벤트를 등록할 request객체.
+
+  data이벤트와 end이벤트를 합친 매크로 함수. data이벤트로 data를 모은 후 end이벤트가 발생하면 endData 이벤트를
+  발생시킨다.
+
+routing
+  req: object. 요청의 request객체.
+  res: object. 요청의 response객체.
+
+  pattern: object. ip의 정규식패턴.
+  
+  req의 쿠키를 분석해 새로운 세션을 생성하거나 sessionTable에서 기존의 세션을 찾아
+  req의 멤버변수 session으로 넣어준다. 그리고 나서 요청한 ip, method, url을 콘솔출력으로 로깅하며,
+  routingTable에서 해당 url과 method로 요청을 라우팅 한다.
+
+print
+  routingTable을 콘솔출력한다.(디버깅용 함수)
+
+setWebRoot
+  __WEB_ROOT의 setter.
+
+redirectTOErrorPage
+  'Error_404' url로 요청을 라우팅하는 매크로 함수.
+
+* default routing table setting
+add('Error_404')
+  요청한 url에 대한 처리가 프로세스가 없을 때 라우트된다.
+add(['/'])
+  url '/' 기본 라우트. 빈페이지를 전송한다.
+add('/favicon/ico')
+  파비콘은 기본적으로 제공하지 않는다.
+add('*')
+  routingTable에 등록되지 않은 모든 요청을 처리하는 기본 url. url에 해당하는 경로의 파일이 있으면 그 파일을 
+  보내주며, __WEB_ROOT의 상위 경로의 접근이나 url에 해당하는 파일이 없는 경우 'Error_404'로 라우트한다.
+
+
+============== node_modules/router/config.json ==============
+* index.js 설정파일
+
+DEFAULT_ACCEPT_METHOD: string. index.js의 add의 세번째 인자로 null이 전달 되었을 때 이 변수가 세번째 인자로서
+                       자동으로 세팅된다.
+
+
+============== node_modules/router/mimetype.json ==============
+* mimetype 리스트. res를 보낼 때 'Content-Type'헤더를 넣기위해 사용된다.
+

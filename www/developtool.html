@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Metro, a sleek, intuitive, and powerful framework for faster and easier web development for Windows Metro Style.">
+    <meta name="keywords" content="HTML, CSS, JS, JavaScript, framework, metro, front-end, frontend, web development">
+    <meta name="author" content="Sergey Pimenov and Metro UI CSS contributors">
+
+    <link rel='shortcut icon' type='image/x-icon' href='../favicon.ico' />
+
+    <title>DeveloperTool</title>
+
+	<link href="./lib/metroui/css/metro.min.css" rel="stylesheet">
+    <link href="./lib/metroui/css/metro-icons.css" rel="stylesheet">
+    <link href="./lib/metroui/css/metro-responsive.css" rel="stylesheet">
+    <link href="./lib/css/developtool.css" rel="stylesheet">
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.2/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="./lib/jquery/js/jquery-2.1.4.min.js"></script>
+    <script src="./lib/metroui/js/metro.min.js"></script>
+	<script src="./lib/js-cookie/js/js.cookie.js"></script>
+	<script src="./lib/js/developtool.js"></script>
+
+
+
+    <script>
+    
+		// t: null, success, alert, warning, info
+        function pushMessage(t, caption){
+            $.Notify({
+                caption: caption,
+                content: ' ',
+                type: t, 
+                shadow: true
+            });
+        }
+
+		function finish(pageNum, element) {
+			if( $('#newSolutionName').val().trim() == '' ) {
+				alert("솔루션 이름이 누락되어있습니다.");
+			} else {
+				$('#newSolutionWindow').data('dialog').close();
+				goFirst(pageNum, element);
+				$('#newSolutionWindow').trigger('send');
+			}
+		}
+		function goFirst(pageNum, element) {
+			element.step(1);
+			element._step = 1;
+		}
+		function page(pageNum, element) {
+			var window = $('#newSolutionWindow');
+			if( !window.data('widget') ) {
+				!window.data('widget', element);
+			}
+
+			switch( pageNum ) {
+			case 2:
+				var solutionType = $('.caption', $(':checked', element._steps[0]).parent()).text();
+				window.data('solutionType', solutionType);
+				break;
+			case 3:
+				var newSolutionName = $('#newSolutionName').val();
+				window.data('newSolutionName', newSolutionName);
+			}
+		}
+
+    </script>
+
+</head>
+<body class="bg-dark">
+
+<div class="horizontal-menu compact" style="height:41px !important">
+    <ul class="horizontal-menu compact">
+        <li>
+            <a href="#" class="dropdown-toggle">파일</a>
+            <ul class="d-menu" data-role="dropdown">
+                <li id="newSolutionButton"><a href="#">새 솔루션(New solution)</a><li>
+                <li id="newDocumentButton" data-action="file/document"><a href="#">새 문서(New)</a></li>
+                <li id="loadDocumentButton" data-action="file/document"><a href="#">불러오기(Load)</a></li>
+                <li id="saveDocumentButton" data-action="file/document"><a href="#">저장하기(Save)</a></li>
+                <li id="saveAsButton" data-action="file/document"><a href="#">다름 이름으로 저장하기(Save as..)</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#" class="dropdown-toggle">찾기</a>
+            <ul class="d-menu" data-role="dropdown">
+                <li id="searchGoogleButton"><a href="#">Google Search</a></li>
+                <li id="searchMSDNButton"><a href="#">MSDN Library</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#" class="dropdown-toggle">실행</a>
+            <ul class="d-menu" data-role="dropdown">
+				<li id="compileSolutionButton" data-action="compile"><a href="#">Compile</a></li>
+                <li id="runSolutionButton"><a href="#">Run</a></li>
+                <li id="runConfigButton"><a href="#">Run Configurations...</a></li>
+				<li id="downloadBinaryButton"><a href="#">Download Binary</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#" class="dropdown-toggle">도움말</a>
+            <ul class="d-menu" data-role="dropdown">
+                <li id="developerInfoButton"><a href="#">개발자 정보</a></li>
+            </ul>
+        </li>
+        <li id="logout" class="place-right" data-action="logout"><a href="#"><span class="mif-exit"></span>&nbsp;로그아웃</a></li>
+
+    </ul>
+
+
+
+
+</div>
+
+<div class="horizontal-menu compact" style="height:38px !important">
+    <ul class="horizontal-menu compact">
+        <li>
+            <button id="miniNewDocumentButton" class="button small-button">
+                <span class="mif-file-empty" data-role="hint" data-hint-background="bg-green" data-hint-mode"2" data-hint="New File|"></span>
+            </button>
+        </li>
+        <div class="icon-menu-divider"></div>
+        <li>
+            <button id="miniSaveDocumentButton" class="button small-button">
+                <span class="mif-floppy-disk" data-role="hint" data-hint-background="bg-green" data-hint-mode"2" data-hint="Save|"></span>
+            </button>
+        </li>
+        <li>
+            <button id="miniLoadDocumentButton" class="button small-button">
+                <span class="mif-folder-open" data-role="hint" data-hint-background="bg-green" data-hint-mode"2" data-hint="Open|"></span>
+            </button>
+        </li>
+        <div class="icon-menu-divider"></div>
+        <li>
+            <button id="miniCompileSolutionButton" class="button small-button">
+                <span class="mif-fire" data-role="hint" data-hint-background="bg-green" data-hint-mode"2" data-hint="Compile|"></span>
+            </button>
+        </li>
+        <div class="icon-menu-divider"></div>
+        <li>
+            <button id="miniDownloadBinaryButton" class="button small-button">
+                <span class="mif-download" data-role="hint" data-hint-background="bg-green" data-hint-mode"2" data-hint="Download|"></span>
+            </button>
+        </li>
+    </ul>
+</div>
+
+<div id="left-charm" class="sidebar-zone-out" data-role="charm" data-position="left">
+    <div class="treeview" data-role="treeview">
+        <ul>                        
+            <span id="userName" class="leaf"></span>
+            <span class="node-toggle"></span>
+            <ul>                                
+            </ul>
+        </ul>
+    </div>
+</div>
+<div class="sidebar-zone-in" style="position:absolute; left:-5px; top:0px; height:100%; width:10px; z-index:100"></div>
+
+
+<div id="documentDialog" class="padding40 dialog" data-role="dialog" data-close-button="true" data-overlay-click-close="true" data-overlay="true" data-overlay-color="op-dark">
+	<h1 id="documentDialogHeader">Create new Documnet</h1>
+	<div class="input-control modern text" data-role="input" style="width:27rem !important;">
+		<input id="documentDialogSolution" type="text" style="color:black !important">
+		<span class="placeholder">Solution Name</span>
+	</div><br />
+	<div class="input-control modern text" data-role="input" style="width:27rem !important;">
+		<input id="documentDialogFolder" type="text" style="color:black !important">
+		<span  class="placeholder">Folder Path</span>
+	</div><br />
+	<div class="input-control modern text" data-role="input" style="width:27rem !important;">
+		<input id="documentDialogFileName" type="text" style="color:black !important">
+		<span class="placeholder">File Name</span>
+	</div><br />
+	<button id="documentDialogOK" class="button place-right"><span class="mif-checkmark"></span>OK</button>
+</div>
+
+<div id="searchDialog" class="padding40 dialog" data-role="dialog" data-close-button="true" data-overlay-click-close="true" data-overlay="true" data-overlay-color="op-dark">
+	<h1 id="searchDialogHeader">Search</h1>
+	<div class="input-control modern text" data-role="input" style="width:27rem !important;">
+		<input id="searchDialogText" type="text" style="color:black !important">
+		<span class="placeholder">Search Text...</span>
+	</div>&nbsp;&nbsp;&nbsp;&nbsp;
+	<button id="searchDialogOK" class="button place-right"><span class="mif-checkmark"></span>OK</button>
+</div>
+
+<div id="developerInfoDialog" class="padding40 dialog" data-role="dialog" data-close-button="true" data-overlay-click-close="true" data-overlay="true" data-overlay-color="op-dark">
+	<h1 id="developerInfoDialogHeader">Info</h1>
+	<p>
+		developer: 이용재, 이재형, 임권창<br />
+		version: 1.0.0<br />
+		comment: console.log("즐코!");
+	</p>
+</div>
+
+<div id="runConfigurationDialog" class="padding40 dialog" data-role="dialog" data-close-button="true" data-overlay-click-close="true" data-overlay="true" data-overlay-color="op-dark">
+	<h1 id="runConfigurationDialog">Select Target OS</h1>
+		<label class="input-control radio block">
+			<input type="radio" name="OS" checked>
+			<span class="check"></span>
+			<span class="caption">Windows</span>
+		</label>
+
+		<label class="input-control radio block">
+			<input type="radio" name="OS">
+			<span class="check"></span>
+			<span class="caption">Unix<span>
+		</label>
+</div>
+
+<div id="newSolutionWindow" class="window" data-role="dialog" data-width="800" data-overlay="true" data-overlay-click-close="true" data-overlay-color="op-dark" data-action="file/solution">
+	<div class="window-caption bg-cyan fg-white">
+		<span class="window-caption-icon"><span class="mif-windows"></span></span>
+		<span class="window-caption-title">New Solution</span>
+		<span id="newSolutionCloseButton" class="btn-close bg-red fg-white"></span>
+	</div>
+	<div class="window-content bg-dark fg-white">
+
+            <div class="wizard2"
+                 data-role="wizard2"
+                 data-button-labels='{"help": "<span class=\"mif-first\"></span>", "prev": "<span class=\"mif-arrow-left\"></span>", "next": "<span class=\"mif-arrow-right\"></span>", "finish": "<span class=\"mif-checkmark\"></span>"}'
+                 data-on-finish="finish"
+                 data-on-help="goFirst"
+                 data-on-page="page">
+
+                <div class="step">
+                    <div class="step-content">
+                        
+                        <h1 class="no-margin-top">Choose Your Solution Type</h1>
+                        <br />
+                        <br />
+
+                        <label class="input-control radio block">
+                            <input type="radio" name="t1" checked>
+                            <span class="check"></span>
+                            <span class="caption">C</span>
+                        </label>
+
+                        <label class="input-control radio block">
+                            <input type="radio" name="t1">
+                            <span class="check"></span>
+                            <span class="caption">Cpp<span>
+                        </label>
+
+                        <label class="input-control radio block">
+                            <input type="radio" name="t1">
+                            <span class="check"></span>
+                            <span class="caption">Java</span>
+                        </label>
+
+                        <br />
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h1 class="no-margin-top">Insert Solution Name</h1>
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <div class="input-control modern text big-input" style="width:30rem !important;" data-role="input">
+							<input id="newSolutionName" type="text" style="color:white !important;">
+							<span class="label" style="color:rgb(221,221,221) !important;">Solution name</span>
+							<span class="informer" style="color:rgb(221,221,221) !important">Insert your solution name here</span>
+							<span class="placeholder">Insert your solution name here</span>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h1 class="no-margin-top">Finish</h1>
+                        <br />
+                        <br />
+
+                    </div>
+                </div>
+
+            </div>
+
+	</div>
+</div>
+
+
+
+<div class="tabcontrol2" style="position:absolute; top:79px; bottom:0px;">
+    <ul id="tabs" class="tabs">
+    </ul>
+    <div class="frames" style="position:inherit; top:35px !important; bottom: 0px !important;">
+        <div class="frame" id="tab" style="height:100%; padding:1rem; background-color:white; display:none">  
+            <div id="editor" style="position:absolute; top:1rem; right:1rem; bottom:1rem; left:1rem;" ></div>
+            <div id="output" class="panel collapsible" data-role="panel">
+                <div class="heading" style="padding: .4rem 0; height:none;">
+                    <span class="title" style="vertical-align:middle;">Output</span>
+                </div>
+                <div id="compileLogger" class="content padding10" style="min-height:8rem;">
+					<pre>
+					</pre>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+<div style="font-style:italic; line-height:30rem; text-align:center; text-shadow:2px 2px 2px; z-index:-1;">
+	<span style="color:white; font-size:2rem;">
+		<span class="mif-bell mif-ani-ring mif-ani-fast"></span>&nbsp;
+		For starting IDEEON , Click "파일" button and make a new solution.
+	</span>
+</div>
+
+
+</div>
+
+
+
+</body>
+</html>
